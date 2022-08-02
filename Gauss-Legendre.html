@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ガウス＝ルジャンドルの円周率</title>
+<script src="bignumber.js"></script>
+<script>
+//100桁の円周率
+var pi100= "3.14159265358979323846264338327950288419716939937510"
++"5820974944592307816406286208998628034825342117067";          //既知の円周率
+
+function calc() {                                               //bignumber.jsを使わない計算
+    //結果をクリア
+    document.getElementById("result").innerHTML = "";           //結果表示エリアのID
+
+    //反復回数を取得
+    var n = document.getElementById("num").value;               //反復回数入力フォームのID
+    document.getElementById("nMemo").innerHTML = n;             //反復回数表示エリアのID
+
+    //初期値
+    var a = 1;
+    var b = 1 / Math.sqrt(2);                                   //2の平方根を求める
+    var t = 1 / 4;
+    var p = 1;
+
+    //円周率の計算
+    var a1, b1, t1, p1, pi, result;
+    for (var i=0; i<n; i++) {
+        a1 = (a + b) / 2;
+        b1 = Math.sqrt(a * b);
+        t1 = t - p * Math.pow((a - a1), 2);                     //(a-a1)を二乗する
+        p1 = 2 * p;
+        pi = Math.pow((a1 + b1), 2) / (4 * t1);
+        //計算結果を表示
+        result = "[" + (i+1) +"]";
+        if (document.getElementById("check100").checked) {      //比較チェックボックスがチェックされていたとき
+            result += checkPI(pi.toString()) + "<br>";          //数値を文字列に変換
+        } else {
+            result += pi + "<br>";
+        }
+        document.getElementById("result").innerHTML += result;
+        //値を保存
+        a = a1;
+        b = b1;
+        t = t1;
+        p = p1;        
+    }
+}
+
+function calcBN() {
+    //結果をクリア
+    document.getElementById("resultBN").innerHTML = "";         //結果表示エリア（BigNumber版）のID
+
+    //反復回数を取得
+    var n = document.getElementById("num").value;
+    document.getElementById("nMemoBN").innerText = n;           //反復回数表示エリア（BigNumber版）のID
+
+    //BIGNUMBERの小数点以下の桁数を変更
+    var d = Number(document.getElementById("decimal").value);   //桁数入力フォームのID
+    BigNumber.config({DECIMAL_PLACES: d});                      //小数点以下の最大桁数を設定
+    document.getElementById("dMemoBN").innerText = d;           //桁数表示エリア(BigNumber版)のID
+
+    //初期値（BigNumber版）
+    var a = new BigNumber(1);                                   //BigNumberオブジェクトを生成
+    var b = new BigNumber(2);
+    b = a.div(b.sqrt());                                        //BigNumberオブジェクトの平方根
+    var t = new BigNumber(1);
+    t = t.div(4);                                               //BigNumberオブジェクトの割り算
+    var p = new BigNumber(1);
+
+    //円周率の計算（BibNumber版）
+    var a1, b1, t1, p1, pi, result;
+    for (var i=0; i<n; i++) {
+        a1 = (a.plus(b)).div(2);                        //BigNumberオブジェクトの足し算
+        b1 = (a.times(b)).sqrt();                       //BigNumberオブジェクトのかけ算
+        t1 = t.minus(p.times((a.minus(a1)).pow(2)));    //BigNumberオブジェクトの引き算
+        p1 = p.times(2);
+        pi = ((a1.plus(b1)).pow(2)).div(t1.times(4));   //BigNumberオブジェクトのべき乗
+        //計算結果を表示
+        result = "[" + (i+1) +"]";
+        if (document.getElementById("check100").checked) {
+            result += checkPI(pi.toString()) + "<br>";      //BigNumberオブジェクト
+        } else {
+            result += pi + "<br>";
+        }
+        document.getElementById("resultBN").innerHTML += result;
+        //値を保存
+        a = a1;
+        b = b1;
+        t = t1;
+        p = p1;
+    }
+}
+
+function checkPI(pi) {
+    //100桁の円周率と比較
+    var outPI = "<b>";                                  //b要素のはじめ
+    for (var i=0; i<pi.length; i++) {
+        if (pi.substr(i, 1) == pi100.substr(i, 1)) {     //文字列から1文字取り出す
+            //一致
+            outPI += pi.substr(i, 1);
+            if(i == pi.length-1) outPI += "</b>";       //最後まで調べたらｂ要素を閉じる
+        } else {
+            //不一致
+            outPI += "</b>" + pi.substr(i);             //文字列の残り全部
+            break;
+        }
+    }
+    return outPI;
+}
+</script>
+<style>
+input[type="number"] {width: 50px;}
+div {
+    padding: 4px;
+    border: thin solid #CCCCCC;
+}
+b {color: #0000CC;}
+</style>
+</head>
+<body>
+<p>ガウス＝ルジャンドルの円周率</p>
+反復回数：
+<input type="number" id="num" value="4" min="1">
+小数点以下桁数（BigNumber版）：
+<input type="number" id="decimal" value="20" min="16">
+<input type="checkbox" id="check100" checked>100桁の円周率と比較する
+<input type="button" value="計算" onclick="calc()">
+<input type="button" value="計算(BigNumber版)" onclick="calcBN()">
+<hr>
+結果：
+<span id="nMemo">4</span>回反復
+<div id="result"></div>
+<br>
+結果(BigNumber版)：
+<span id="nMemoBN">4</span>回反復
+小数点以下<span id="dMemoBN">20</span>桁
+<div id="resultBN"></div>
+</body>
+</html>
